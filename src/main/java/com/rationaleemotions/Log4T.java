@@ -8,11 +8,13 @@ import java.util.Objects;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.Layout;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
+import org.testng.ITestNGMethod;
 import org.testng.ITestResult;
 import org.testng.Reporter;
 
@@ -30,9 +32,16 @@ public final class Log4T {
 
   private static final IAppenderInfo appenderInfo = getAppenderInfo();
   private static final Set<String> appenderInitialisedLoggers = ConcurrentHashMap.newKeySet();
+  private static final Logger log = initLogger();
 
   private Log4T() {
     //Utility class. Hide constructor and defeat instantiation.
+  }
+
+  private static Logger initLogger() {
+    Logger log = LogManager.getLogger(Log4T.class);
+    log.addAppender(new ConsoleAppender(new PatternLayout(PatternLayout.TTCC_CONVERSION_PATTERN)));
+    return log;
   }
 
   /**
@@ -47,17 +56,28 @@ public final class Log4T {
   private static Logger getLogger(ITestResult current) {
     Objects.requireNonNull(current,
         "A valid logger is available ONLY from within a TestNG Test or Config method");
+    ITestNGMethod tm = current.getMethod();
+    Objects.requireNonNull(tm, "Could not identify the TestNG Test|Config method");
     String methodName = current.getMethod().getQualifiedName();
     if (!appenderInitialisedLoggers.contains(methodName)) {
       String fileName =
           appenderInfo.getLogsDirectory().toFile().getAbsolutePath() + "/" + methodName;
+      if (tm.isDataDriven()) {
+        Logger.getRootLogger().warn(methodName
+            + " is a data driven test. Logs from all invocations will be consolidated into the same file: " + fileName);
+      }
+      boolean multipleInvocations = tm.getInvocationCount() > 1;
+      if (multipleInvocations) {
+        log.warn(methodName
+            + " is a test with multiple invocations. Logs from all invocations will be consolidated into the same file: " + fileName);
+      }
       try {
         FileAppender appender = new FileAppender(appenderInfo.getLayout(), fileName, false);
         LogManager.getLogger(methodName).addAppender(appender);
         appenderInitialisedLoggers.add(methodName);
         current.setAttribute("log4t.logs", fileName);
       } catch (IOException e) {
-        Logger.getRootLogger().error("Unable to add an appender to " + methodName, e);
+        log.error("Unable to add an appender to " + methodName, e);
       }
     }
     return LogManager.getLogger(methodName);

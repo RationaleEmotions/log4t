@@ -14,4 +14,8 @@ public class AppTest {
     Log4T.getLogger().info("testMethod1");
   }
 
+  @Test(invocationCount = 2)
+  public void tm() {
+    Log4T.getLogger().info("testMethod1");
+  }
 }
