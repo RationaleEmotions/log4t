@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="2546_suite" verbose="2">
+  <test name="2546_test" verbose="2" parallel="methods">
+    <classes>
+      <class name="com.rationaleemotions.AppTest"/>
+      <class name="com.rationaleemotions.App2Test"/>
+    </classes>
+  </test>
+</suite>
