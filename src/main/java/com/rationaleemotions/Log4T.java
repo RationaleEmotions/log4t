@@ -55,7 +55,7 @@ public final class Log4T {
         FileAppender appender = new FileAppender(appenderInfo.getLayout(), fileName, false);
         LogManager.getLogger(methodName).addAppender(appender);
         appenderInitialisedLoggers.add(methodName);
-        current.setAttribute("logFile", fileName);
+        current.setAttribute("log4t.logs", fileName);
       } catch (IOException e) {
         Logger.getRootLogger().error("Unable to add an appender to " + methodName, e);
       }
@@ -78,7 +78,7 @@ public final class Log4T {
       public Path getLogsDirectory() {
         Path path = Paths.get("logs");
         path.toFile().mkdirs();
-        return Paths.get("log4t.logs");
+        return path;
       }
     };
   }
